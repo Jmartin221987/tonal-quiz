@@ -1,101 +1,180 @@
-import Image from "next/image";
+'use client'
+import { useState, useEffect } from 'react'
+import { Scale, Interval } from 'tonal'
+
+const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+const degrees = [
+  '1P',
+  '2m',
+  '2M',
+  '3m',
+  '3M',
+  '4P',
+  '5d',
+  '5P',
+  '6m',
+  '6M',
+  '7m',
+  '7M',
+]
+const degreeNames = [
+  'Tonic',
+  'Minor 2nd/b9th',
+  'Major 2nd/9th',
+  'Minor 3/#9',
+  'Major 3/10',
+  'Perfect 4/11',
+  'Tritone/Diminished 5th/#11',
+  'Perfect 5',
+  'Minor 6/b13',
+  'Major 6th/13th',
+  'Dominate 7',
+  'Major 7',
+]
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [selectedKey, setSelectedKey] = useState('C')
+  const [currentKey, setCurrentKey] = useState('')
+  const [currentDegree, setCurrentDegree] = useState<number | string>('')
+  const [correctNote, setCorrectNote] = useState('')
+  const [options, setOptions] = useState([])
+  const [message, setMessage] = useState('Select the correct note!')
+  const [showNext, setShowNext] = useState(false)
+  const [usedDegrees, setUsedDegrees] = useState<number[]>([])
+  const [currentDegreeName, setCurrentDegreeName] = useState('')
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    generateQuestion()
+  }, [selectedKey])
+
+  function generateQuestion() {
+    let availableDegrees = degrees.filter((d) => {
+      return !usedDegrees.includes(d)
+    })
+
+    const randomDegree =
+      availableDegrees[Math.floor(Math.random() * availableDegrees.length)]
+    const semitones = Interval.get(randomDegree).semitones // Get semitone value
+
+    if (availableDegrees.length === 0) {
+      setUsedDegrees([])
+      availableDegrees = [...degrees]
+    }
+    setUsedDegrees((prev) => [...prev, semitones]) // Store semitones
+    setCurrentDegree(semitones) // Store semitone for calculations
+
+    const myNub = Interval.get(randomDegree).semitones
+    const myDegreeName = degreeNames[myNub]
+    setCurrentDegreeName(myDegreeName) // Store interval name for display
+
+    const scaleNotes = Scale.get(`${selectedKey.split(' ')[0]} chromatic`).notes
+    const correct = scaleNotes[semitones] || 'Unknown'
+    const sortedOptions = [...scaleNotes]
+
+    function sortOptions(array: any) {
+      return array
+    }
+
+    setCurrentKey(selectedKey)
+    setCorrectNote(correct)
+    setOptions(sortedOptions)
+    setMessage('Select the correct note!')
+    setShowNext(false)
+  }
+
+  function handleChoice(selection) {
+    if (selection === correctNote) {
+      setMessage(`✅ Correct! The answer is ${correctNote}`)
+    } else {
+      setMessage(`❌ Wrong! The correct answer is ${correctNote}`)
+    }
+    setShowNext(true)
+  }
+
+  function handleNextQuestion() {
+    generateQuestion()
+  }
+
+  useEffect(() => {
+    if (currentDegree === 1) {
+      setCurrentDegree(Interval.get('2m').semitones)
+      setCurrentDegreeName('minor 2nd/b9th')
+    } else if (currentDegree === 2) {
+      setCurrentDegree(Interval.get('2M').semitones)
+      setCurrentDegreeName('Major 2nd/9th')
+    } else if (currentDegree === 3) {
+      setCurrentDegree(Interval.get('3m').semitones)
+      setCurrentDegree('minor 3/#9')
+    } else if (currentDegree === 4) {
+      setCurrentDegree(Interval.get('3M').semitones)
+      setCurrentDegreeName('Major 3/10')
+    } else if (currentDegree === 5) {
+      setCurrentDegree(Interval.get('4P').semitones)
+      setCurrentDegreeName('Perfect 4/11')
+    } else if (currentDegree === 6) {
+      setCurrentDegree(Interval.get('5d').semitones)
+      setCurrentDegreeName('Tritone/Diminished 5th/#11')
+    } else if (currentDegree === 7) {
+      setCurrentDegree(Interval.get('5P').semitones)
+      setCurrentDegreeName('Perfect 5')
+    } else if (currentDegree === 8) {
+      setCurrentDegree(Interval.get('6m').semitones)
+      setCurrentDegreeName('minor 6/b13')
+    } else if (currentDegree === 9) {
+      setCurrentDegree(Interval.get('6M').semitones)
+      setCurrentDegreeName('Major 6th/13th')
+    } else if (currentDegree === 10) {
+      setCurrentDegree(Interval.get('7m').semitones)
+      setCurrentDegreeName('Dominate 7')
+    } else if (currentDegree === 11) {
+      setCurrentDegree(Interval.get('7M').semitones)
+      setCurrentDegreeName('Major 7')
+    } else if (currentDegree === 0) {
+      setCurrentDegree(Interval.get('1P').semitones)
+      setCurrentDegreeName('Tonic')
+    }
+  }, [])
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+      <h1 className="text-2xl font-bold">Scale Degree Quiz</h1>
+      <p className="text-lg mt-4">Choose A Key</p>
+      <select
+        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg"
+        value={selectedKey}
+        onChange={(e) => {
+          setSelectedKey(e.target.value)
+        }}
+      >
+        {keys.map((key, index) => (
+          <option key={index} value={key}>
+            {key}
+          </option>
+        ))}
+      </select>
+      <p className="text-lg mt-2">
+        What is the {currentDegreeName} degree of {currentKey}?
+      </p>
+      <div className="mt-4 grid grid-cols-3 gap-4">
+        {options.map((option, index) => (
+          <button
+            key={index}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-800 rounded-lg"
+            onClick={() => handleChoice(option)}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+            {option}
+          </button>
+        ))}
+      </div>
+      <p className="mt-6 text-xl font-semibold">{message}</p>
+      {showNext && (
+        <button
+          className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-800 rounded-lg"
+          onClick={handleNextQuestion}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Next Question
+        </button>
+      )}
     </div>
-  );
+  )
 }
