@@ -37,7 +37,9 @@ export default function Home() {
   const [currentKey, setCurrentKey] = useState('')
   const [currentDegree, setCurrentDegree] = useState<number | string>('')
   const [correctNote, setCorrectNote] = useState('')
-  const [options, setOptions] = useState([])
+  // const [options, setOptions] = useState([])
+  const [options, setOptions] = useState<string[]>([]) // ✅ Now TypeScript knows it's a string array
+
   const [message, setMessage] = useState('Select the correct note!')
   const [showNext, setShowNext] = useState(false)
   const [usedDegrees, setUsedDegrees] = useState<number[]>([])
@@ -49,40 +51,77 @@ export default function Home() {
 
   function generateQuestion() {
     let availableDegrees = degrees.filter((d) => {
-      return !usedDegrees.includes(d)
+      const semitoneValue = Interval.get(d).semitones // ✅ Convert interval to semitones
+      return !usedDegrees.includes(semitoneValue)
     })
-
-    const randomDegree =
-      availableDegrees[Math.floor(Math.random() * availableDegrees.length)]
-    const semitones = Interval.get(randomDegree).semitones // Get semitone value
 
     if (availableDegrees.length === 0) {
       setUsedDegrees([])
       availableDegrees = [...degrees]
     }
-    setUsedDegrees((prev) => [...prev, semitones]) // Store semitones
-    setCurrentDegree(semitones) // Store semitone for calculations
+
+    const randomDegree =
+      availableDegrees[Math.floor(Math.random() * availableDegrees.length)]
+
+    const semitones = Interval.get(randomDegree).semitones // ✅ Now it's properly declared
+
+    setUsedDegrees((prev) => [...prev, semitones]) // ✅ Store semitones as numbers
+    setCurrentDegree(semitones) // ✅ No more error!
 
     const myNub = Interval.get(randomDegree).semitones
     const myDegreeName = degreeNames[myNub]
     setCurrentDegreeName(myDegreeName) // Store interval name for display
 
     const scaleNotes = Scale.get(`${selectedKey.split(' ')[0]} chromatic`).notes
-    const correct = scaleNotes[semitones] || 'Unknown'
-    const sortedOptions = [...scaleNotes]
+    const correct = scaleNotes[semitones] || 'Unknown' // ✅ No more error!
 
-    function sortOptions(array: any) {
-      return array
-    }
-
+    setCorrectNote(correct)
     setCurrentKey(selectedKey)
     setCorrectNote(correct)
-    setOptions(sortedOptions)
+    setOptions(scaleNotes)
+    // setMessage('Select the correct note!')
+    // setShowNext(false)
     setMessage('Select the correct note!')
     setShowNext(false)
   }
+  //   // let availableDegrees = degrees.filter((d) => {
+  //   //   return !usedDegrees.includes(d)
+  //   // })
+  //   let availableDegrees = degrees.filter((d) => {
+  //     const semitones = Interval.get(d).semitones // Convert string to number
+  //     return !usedDegrees.includes(semitones)
+  //   })
 
-  function handleChoice(selection) {
+  //   const randomDegree =
+  //     availableDegrees[Math.floor(Math.random() * availableDegrees.length)]
+  //   // const semitones = Interval.get(randomDegree).semitones // Get semitone value
+
+  //   if (availableDegrees.length === 0) {
+  //     setUsedDegrees([])
+  //     availableDegrees = [...degrees]
+  //   }
+  //   // setUsedDegrees((prev) => [...prev, semitones]) // Store semitones
+  //   setUsedDegrees((prev) => [...prev, Interval.get(randomDegree).semitones])
+  //   setCurrentDegree(semitones) // Store semitone for calculations
+
+  //   const myNub = Interval.get(randomDegree).semitones
+  //   const myDegreeName = degreeNames[myNub]
+  //   setCurrentDegreeName(myDegreeName) // Store interval name for display
+
+  //   const scaleNotes = Scale.get(`${selectedKey.split(' ')[0]} chromatic`).notes
+  //   const correct = scaleNotes[semitones] || 'Unknown'
+  //   const sortedOptions = [...scaleNotes]
+
+  //   // const sortOptions = (array: any) => array
+
+  //   setCurrentKey(selectedKey)
+  //   setCorrectNote(correct)
+  //   setOptions(sortedOptions as string[])
+  //   setMessage('Select the correct note!')
+  //   setShowNext(false)
+  // }
+
+  function handleChoice(selection: string) {
     if (selection === correctNote) {
       setMessage(`✅ Correct! The answer is ${correctNote}`)
     } else {
@@ -134,6 +173,7 @@ export default function Home() {
       setCurrentDegreeName('Tonic')
     }
   }, [])
+  console.log(currentDegreeName)
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
