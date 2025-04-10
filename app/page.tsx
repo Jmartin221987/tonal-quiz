@@ -112,58 +112,111 @@ export default function Home() {
     const currentInterval = Interval.fromSemitones(semitones)
 
     let correct: string | undefined
-    switch (currentInterval) {
-      case '1P':
-        correct = scaleNotes[0]
-        setCurrentDegreeName('Tonic')
-        break
-      case '2m':
-        correct = scaleNotes[1]
-        setCurrentDegreeName('Major 2nd/9th')
-        break
-      case '2M':
-        correct = scaleNotes[1]
-        setCurrentDegreeName('Major 2nd/9th')
-        break
-      case '3M':
-        correct = scaleNotes[2]
-        setCurrentDegreeName('Major 3rd/10th')
-        break
-      case '3m':
-        correct = scaleNotes[2]
-        setCurrentDegreeName('Minor 3rd/#9th')
-        break
-      case '4P':
-        correct = scaleNotes[3]
-        setCurrentDegreeName('Perfect 4th/11th')
-        break
-      case '5d':
-        correct = scaleNotes[4] // not right just need place filler
-        setCurrentDegreeName('Tritone/#11')
-        break
-      case '5P':
-        correct = scaleNotes[4]
-        setCurrentDegreeName('Perfect 5th')
-        break
-      case '6m':
-        correct = scaleNotes[5]
-        setCurrentDegreeName('Minor 6/b13')
-        break
-      case '6M':
-        correct = scaleNotes[5]
-        setCurrentDegreeName('Major 6th/13th')
-        break
-      case '7m':
-        correct = scaleNotes[6]
-        setCurrentDegreeName('Dominate 7')
-        break
-      case '7M':
-        correct = scaleNotes[6]
-        setCurrentDegreeName('Major 7')
-        break
-      default:
-        console.log('Just another day.')
+    if (selectedMode === 'major' || selectedMode === 'minor') {
+      switch (currentInterval) {
+        case '1P':
+          correct = scaleNotes[0]
+          setCurrentDegreeName('Tonic')
+          break
+        case '2m':
+          correct = scaleNotes[1]
+          setCurrentDegreeName('b2/b9')
+          break
+        case '2M':
+          correct = scaleNotes[1]
+          setCurrentDegreeName('Minor 2nd/9th')
+          break
+        case '3M':
+          correct = scaleNotes[2]
+          setCurrentDegreeName('Major 3rd/10th')
+          break
+        case '3m':
+          correct = scaleNotes[2]
+          setCurrentDegreeName('Minor 3rd/#9th')
+          break
+        case '4P':
+          correct = scaleNotes[3]
+          setCurrentDegreeName('Perfect 4th/11th')
+          break
+        case '5P':
+          correct = scaleNotes[4]
+          setCurrentDegreeName('Perfect 5th')
+          break
+        case '6m':
+          correct = scaleNotes[5]
+          setCurrentDegreeName('Minor 6/b13')
+          break
+        case '6M':
+          correct = scaleNotes[5]
+          setCurrentDegreeName('Major 6th/13th')
+          break
+        case '7m':
+          correct = scaleNotes[6]
+          setCurrentDegreeName('Dominate 7')
+          break
+        case '7M':
+          correct = scaleNotes[6]
+          setCurrentDegreeName('Major 7')
+          break
+        default:
+          console.log('Just another day.')
+      }
+    } else {
+      switch (currentInterval) {
+        case '1P':
+          correct = scaleNotes[0]
+          setCurrentDegreeName('Tonic')
+          break
+        case '2m':
+          correct = scaleNotes[1]
+          setCurrentDegreeName('b2/b9')
+          break
+        case '2M':
+          correct = scaleNotes[2]
+          setCurrentDegreeName('Major 2nd/9th')
+          break
+        case '3m':
+          correct = scaleNotes[3]
+          setCurrentDegreeName('Minor 3rd/b3/#9th')
+          break
+        case '3M':
+          correct = scaleNotes[4]
+          setCurrentDegreeName('Major 3rd/10th')
+          break
+        case '4P':
+          correct = scaleNotes[5]
+          setCurrentDegreeName('Perfect 4th/11th')
+          break
+        case '5d':
+          correct = scaleNotes[6] // not right just need place filler
+          setCurrentDegreeName('Tritone/#11')
+          break
+        case '5P':
+          correct = scaleNotes[7]
+          setCurrentDegreeName('Perfect 5th')
+          break
+        case '6m':
+          correct = scaleNotes[8]
+          setCurrentDegreeName('Minor 6/b6/b13')
+          break
+        case '6M':
+          correct = scaleNotes[9]
+          setCurrentDegreeName('Major 6th/13th')
+          break
+        case '7m':
+          correct = scaleNotes[10]
+          setCurrentDegreeName('Dominate 7/b7')
+          break
+        case '7M':
+          correct = scaleNotes[11]
+          setCurrentDegreeName('Major 7')
+          break
+        default:
+          console.log('Just another day.')
+      }
     }
+
+    console.log('correct: ', correct)
 
     const randomizeScaleNotes = scaleNotes.sort(() => Math.random() - 0.5)
     setCurrentKey(selectedKey)
