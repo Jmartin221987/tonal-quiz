@@ -2,8 +2,26 @@
 import { useState, useEffect } from 'react'
 import { Scale, Interval } from 'tonal'
 
-const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-const degrees = [
+const keys = [
+  'C',
+  'C#',
+  'Db',
+  'D',
+  'D#',
+  'Eb',
+  'E',
+  'F',
+  'F#',
+  'Gb',
+  'G',
+  'G#',
+  'Ab',
+  'A',
+  'A#',
+  'Bb',
+  'B',
+]
+const degreesChromatic = [
   '1P',
   '2m',
   '2M',
@@ -17,109 +35,143 @@ const degrees = [
   '7m',
   '7M',
 ]
-const degreeNames = [
-  'Tonic',
-  'Minor 2nd/b9th',
-  'Major 2nd/9th',
-  'Minor 3/#9',
-  'Major 3/10',
-  'Perfect 4/11',
-  'Tritone/Diminished 5th/#11',
-  'Perfect 5',
-  'Minor 6/b13',
-  'Major 6th/13th',
-  'Dominate 7',
-  'Major 7',
-]
+const degreesMajor = ['1P', '2M', '3M', '4P', '5P', '6M', '7M']
+const degreesMinor = ['1P', '2M', '3m', '4P', '5P', '6m', '7m']
+
+const modes = ['major', 'minor', 'chromatic']
 
 export default function Home() {
   const [selectedKey, setSelectedKey] = useState('C')
+  const [selectedMode, setSelectedMode] = useState('major')
   const [currentKey, setCurrentKey] = useState('')
-  const [currentDegree, setCurrentDegree] = useState<number | string>('')
   const [correctNote, setCorrectNote] = useState('')
-  // const [options, setOptions] = useState([])
-  const [options, setOptions] = useState<string[]>([]) // ✅ Now TypeScript knows it's a string array
+  const [options, setOptions] = useState<string[]>([])
 
   const [message, setMessage] = useState('Select the correct note!')
   const [showNext, setShowNext] = useState(false)
-  const [usedDegrees, setUsedDegrees] = useState<number[]>([])
+  const [usedDegrees, setUsedDegrees] = useState<number[]>([]) // makes sure degree arent repeated
+  const [completedCombos, setCompletedCombos] = useState<string[]>([])
   const [currentDegreeName, setCurrentDegreeName] = useState('')
 
   useEffect(() => {
     generateQuestion()
-  }, [selectedKey])
+  }, [selectedKey, selectedMode])
 
+  let availableDegrees
   function generateQuestion() {
-    let availableDegrees = degrees.filter((d) => {
-      const semitoneValue = Interval.get(d).semitones // ✅ Convert interval to semitones
-      return !usedDegrees.includes(semitoneValue)
-    })
-
-    if (availableDegrees.length === 0) {
-      setUsedDegrees([])
-      availableDegrees = [...degrees]
+    //converts degree name into its intervals
+    if (selectedMode === 'major') {
+      availableDegrees = degreesMajor.filter((d) => {
+        const semitoneValue = Interval.get(d).semitones // ✅ Convert interval to semitones
+        return !usedDegrees.includes(semitoneValue)
+      })
+    } else if (selectedMode === 'minor') {
+      availableDegrees = degreesMinor.filter((d) => {
+        const semitoneValue = Interval.get(d).semitones // ✅ Convert interval to semitones
+        return semitoneValue
+      })
+    } else {
+      availableDegrees = degreesChromatic.filter((d) => {
+        const semitoneValue = Interval.get(d).semitones // ✅ Convert interval to semitones
+        return !usedDegrees.includes(semitoneValue)
+      })
     }
+    console.log('availableDegrees: ', availableDegrees)
 
     const randomDegree =
       availableDegrees[Math.floor(Math.random() * availableDegrees.length)]
+    console.log('random degree: ', randomDegree)
 
     const semitones = Interval.get(randomDegree).semitones // ✅ Now it's properly declared
 
-    setUsedDegrees((prev) => [...prev, semitones]) // ✅ Store semitones as numbers
-    setCurrentDegree(semitones) // ✅ No more error!
+    setUsedDegrees((prev) => {
+      console.log(...prev)
+      console.log([...prev, semitones])
+      return [...prev, semitones]
+    }) // ✅ Store semitones as numbers
 
-    const myNub = Interval.get(randomDegree).semitones
-    const myDegreeName = degreeNames[myNub]
-    setCurrentDegreeName(myDegreeName) // Store interval name for display
+    if (availableDegrees.length === 0) {
+      setUsedDegrees([])
 
-    const scaleNotes = Scale.get(`${selectedKey.split(' ')[0]} chromatic`).notes
-    const correct = scaleNotes[semitones] || 'Unknown' // ✅ No more error!
+      // ✅ Mark the current key as completed
+      const combo = `${selectedKey} ${selectedMode}`
+      setCompletedCombos((prev) => [...new Set([...prev, combo])])
 
-    setCorrectNote(correct)
+      return // Exit early — no more questions for this key
+    }
+
+    let scaleNotes
+    if (selectedMode === 'major') {
+      scaleNotes = Scale.get(`${selectedKey.split(' ')[0]} major`).notes
+    } else if (selectedMode === 'minor') {
+      scaleNotes = Scale.get(`${selectedKey.split(' ')[0]} minor`).notes
+    } else {
+      scaleNotes = Scale.get(`${selectedKey.split(' ')[0]} chromatic`).notes
+    }
+
+    const currentInterval = Interval.fromSemitones(semitones)
+
+    let correct: string | undefined
+    switch (currentInterval) {
+      case '1P':
+        correct = scaleNotes[0]
+        setCurrentDegreeName('Tonic')
+        break
+      case '2m':
+        correct = scaleNotes[1]
+        setCurrentDegreeName('Major 2nd/9th')
+        break
+      case '2M':
+        correct = scaleNotes[1]
+        setCurrentDegreeName('Major 2nd/9th')
+        break
+      case '3M':
+        correct = scaleNotes[2]
+        setCurrentDegreeName('Major 3rd/10th')
+        break
+      case '3m':
+        correct = scaleNotes[2]
+        setCurrentDegreeName('Minor 3rd/#9th')
+        break
+      case '4P':
+        correct = scaleNotes[3]
+        setCurrentDegreeName('Perfect 4th/11th')
+        break
+      case '5d':
+        correct = scaleNotes[4] // not right just need place filler
+        setCurrentDegreeName('Tritone/#11')
+        break
+      case '5P':
+        correct = scaleNotes[4]
+        setCurrentDegreeName('Perfect 5th')
+        break
+      case '6m':
+        correct = scaleNotes[5]
+        setCurrentDegreeName('Minor 6/b13')
+        break
+      case '6M':
+        correct = scaleNotes[5]
+        setCurrentDegreeName('Major 6th/13th')
+        break
+      case '7m':
+        correct = scaleNotes[6]
+        setCurrentDegreeName('Dominate 7')
+        break
+      case '7M':
+        correct = scaleNotes[6]
+        setCurrentDegreeName('Major 7')
+        break
+      default:
+        console.log('Just another day.')
+    }
+
+    const randomizeScaleNotes = scaleNotes.sort(() => Math.random() - 0.5)
     setCurrentKey(selectedKey)
-    setCorrectNote(correct)
-    setOptions(scaleNotes)
-    // setMessage('Select the correct note!')
-    // setShowNext(false)
+    setCorrectNote(correct ?? '')
+    setOptions(randomizeScaleNotes)
     setMessage('Select the correct note!')
     setShowNext(false)
   }
-  //   // let availableDegrees = degrees.filter((d) => {
-  //   //   return !usedDegrees.includes(d)
-  //   // })
-  //   let availableDegrees = degrees.filter((d) => {
-  //     const semitones = Interval.get(d).semitones // Convert string to number
-  //     return !usedDegrees.includes(semitones)
-  //   })
-
-  //   const randomDegree =
-  //     availableDegrees[Math.floor(Math.random() * availableDegrees.length)]
-  //   // const semitones = Interval.get(randomDegree).semitones // Get semitone value
-
-  //   if (availableDegrees.length === 0) {
-  //     setUsedDegrees([])
-  //     availableDegrees = [...degrees]
-  //   }
-  //   // setUsedDegrees((prev) => [...prev, semitones]) // Store semitones
-  //   setUsedDegrees((prev) => [...prev, Interval.get(randomDegree).semitones])
-  //   setCurrentDegree(semitones) // Store semitone for calculations
-
-  //   const myNub = Interval.get(randomDegree).semitones
-  //   const myDegreeName = degreeNames[myNub]
-  //   setCurrentDegreeName(myDegreeName) // Store interval name for display
-
-  //   const scaleNotes = Scale.get(`${selectedKey.split(' ')[0]} chromatic`).notes
-  //   const correct = scaleNotes[semitones] || 'Unknown'
-  //   const sortedOptions = [...scaleNotes]
-
-  //   // const sortOptions = (array: any) => array
-
-  //   setCurrentKey(selectedKey)
-  //   setCorrectNote(correct)
-  //   setOptions(sortedOptions as string[])
-  //   setMessage('Select the correct note!')
-  //   setShowNext(false)
-  // }
 
   function handleChoice(selection: string) {
     if (selection === correctNote) {
@@ -128,69 +180,43 @@ export default function Home() {
       setMessage(`❌ Wrong! The correct answer is ${correctNote}`)
     }
     setShowNext(true)
+    // Automatically move to the next question after 1 second
+    setTimeout(() => {
+      generateQuestion()
+    }, 1000)
   }
 
   function handleNextQuestion() {
     generateQuestion()
   }
 
-  useEffect(() => {
-    if (currentDegree === 1) {
-      setCurrentDegree(Interval.get('2m').semitones)
-      setCurrentDegreeName('minor 2nd/b9th')
-    } else if (currentDegree === 2) {
-      setCurrentDegree(Interval.get('2M').semitones)
-      setCurrentDegreeName('Major 2nd/9th')
-    } else if (currentDegree === 3) {
-      setCurrentDegree(Interval.get('3m').semitones)
-      setCurrentDegree('minor 3/#9')
-    } else if (currentDegree === 4) {
-      setCurrentDegree(Interval.get('3M').semitones)
-      setCurrentDegreeName('Major 3/10')
-    } else if (currentDegree === 5) {
-      setCurrentDegree(Interval.get('4P').semitones)
-      setCurrentDegreeName('Perfect 4/11')
-    } else if (currentDegree === 6) {
-      setCurrentDegree(Interval.get('5d').semitones)
-      setCurrentDegreeName('Tritone/Diminished 5th/#11')
-    } else if (currentDegree === 7) {
-      setCurrentDegree(Interval.get('5P').semitones)
-      setCurrentDegreeName('Perfect 5')
-    } else if (currentDegree === 8) {
-      setCurrentDegree(Interval.get('6m').semitones)
-      setCurrentDegreeName('minor 6/b13')
-    } else if (currentDegree === 9) {
-      setCurrentDegree(Interval.get('6M').semitones)
-      setCurrentDegreeName('Major 6th/13th')
-    } else if (currentDegree === 10) {
-      setCurrentDegree(Interval.get('7m').semitones)
-      setCurrentDegreeName('Dominate 7')
-    } else if (currentDegree === 11) {
-      setCurrentDegree(Interval.get('7M').semitones)
-      setCurrentDegreeName('Major 7')
-    } else if (currentDegree === 0) {
-      setCurrentDegree(Interval.get('1P').semitones)
-      setCurrentDegreeName('Tonic')
-    }
-  }, [])
-  console.log(currentDegreeName)
+  const keyModeCombos = keys.flatMap((key) =>
+    modes.map((mode) => `${key} ${mode}`)
+  )
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
       <h1 className="text-2xl font-bold">Scale Degree Quiz</h1>
-      <p className="text-lg mt-4">Choose A Key</p>
+      <p className="text-lg mt-4">Choose A Key & Scale</p>
       <select
-        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg"
-        value={selectedKey}
+        value={`${selectedKey} ${selectedMode}`}
         onChange={(e) => {
-          setSelectedKey(e.target.value)
+          const [key, mode] = e.target.value.split(' ')
+          setSelectedKey(key)
+          setSelectedMode(mode)
         }}
       >
-        {keys.map((key, index) => (
-          <option key={index} value={key}>
-            {key}
-          </option>
-        ))}
+        {keyModeCombos.map((keyModeCombo, index) => {
+          const [key, mode] = keyModeCombo.split(' ')
+          const combo = `${key} ${mode}`
+          const isDisabled = completedCombos.includes(keyModeCombo)
+
+          return (
+            <option key={index} value={combo} disabled={isDisabled}>
+              {isDisabled ? `${combo} (Done)` : combo}
+            </option>
+          )
+        })}
       </select>
       <p className="text-lg mt-2">
         What is the {currentDegreeName} degree of {currentKey}?
